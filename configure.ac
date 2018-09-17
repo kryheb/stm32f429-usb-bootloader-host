@@ -7,6 +7,8 @@ AC_CONFIG_SRCDIR([src/main.cpp])
 AM_INIT_AUTOMAKE([1.10 no-define foreign subdir-objects])
 AC_CONFIG_HEADERS([config.h])
 
+AX_CXX_COMPILE_STDCXX_14(, [mandatory])
+
 # Checks for programs.
 AC_PROG_CXX
 

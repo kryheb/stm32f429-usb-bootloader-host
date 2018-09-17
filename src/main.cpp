@@ -1,25 +1,21 @@
 #include <iostream>
-#include "hidapi.h"
+#include "usbhid.hpp"
 #include <stdio.h>
 
 int main() {
-	std::cout << "HELLO AUTOTOOLS WORLD" << '\n';
 
-	 // Enumerate and print the HID devices on the system
-	  struct hid_device_info *devs, *cur_dev;
+  usbhid::BusController controller;
+  controller.enumerateAll();
+  if (auto devicePtr = controller.findDevice(0x483, 0x5750)) {
+    devicePtr->openCommunication();
+    if (devicePtr->isOpen()) {
+      std::cout << "Device Handle is Open" << '\n';
+    } else {
+      std::cout << "Device Handle is not Open" << '\n';
+    }
+  }
 
-	  devs = hid_enumerate(0x0, 0x0);
-	  cur_dev = devs;
-	  while (cur_dev) {
-	    printf("Device Found\n  type: %04hx %04hx\n  path: %s\n  serial_number: %ls",
-	        cur_dev->vendor_id, cur_dev->product_id, cur_dev->path, cur_dev->serial_number);
-	    printf("\n");
-	    printf("  Manufacturer: %ls\n", cur_dev->manufacturer_string);
-	    printf("  Product:      %ls\n", cur_dev->product_string);
-	    printf("\n");
-	    cur_dev = cur_dev->next;
-	  }
-	  hid_free_enumeration(devs);
 
-	return 0;
+
+  return 0;
 }
