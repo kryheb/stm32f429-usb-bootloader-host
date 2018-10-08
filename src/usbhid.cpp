@@ -2,6 +2,9 @@
 
 #include "usbhid.hpp"
 #include <iostream>
+#include <future>
+#include <stdexcept>
+
 
 using namespace usbhid;
 
@@ -49,6 +52,47 @@ bool Device::openCommunication()
 {
   mHandle = hid_open(mVendorId, mProductId, NULL);
   return isOpen();
+}
+
+
+void Device::sendCommand(Cmd pCommand, SendCommanCB pCallback)
+{
+  DataBuffer data{0};
+  data = {0x01, static_cast<uint8_t>(pCommand)};
+  hid_write(mHandle, data.data(), data.size());
+
+  std::promise<int> pReceiveResponse;
+  std::future<int> fReceiveResponse = pReceiveResponse.get_future();
+  std::thread([&pReceiveResponse, this]{
+    try {
+      auto result = receiveResponse();
+      pReceiveResponse.set_value(result);
+    } catch (...) {
+      pReceiveResponse.set_exception(std::current_exception());
+    }
+  }).detach();
+
+    std::cout << "Waiting..." << '\n';
+    fReceiveResponse.wait();
+    try {
+      auto response = fReceiveResponse.get();
+      // TODO: evaluate response
+      if (pCallback) pCallback(Error::errOK());
+    } catch (std::exception& e) {
+      std::cout << "Response exception: " << e.what() << '\n';
+      if (pCallback) pCallback(Error::err("Response timeout"));
+    }
+}
+
+
+uint8_t Device::receiveResponse()
+{
+  DataBuffer data{0};
+  auto result = hid_read_timeout(mHandle, data.data(), data.size(), RECEIVE_COMMAND_TIMEOUT);
+  if (result <= 0) {
+    throw std::runtime_error("No data received");
+  }
+  return data[RESPONSE_BYTE_INDEX];
 }
 
 

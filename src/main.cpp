@@ -1,5 +1,6 @@
 #include <iostream>
 #include "usbhid.hpp"
+#include "bootloader.hpp"
 #include <stdio.h>
 
 int main() {
@@ -9,9 +10,10 @@ int main() {
   if (auto devicePtr = controller.findDevice(0x483, 0x5750)) {
     devicePtr->openCommunication();
     if (devicePtr->isOpen()) {
-      std::cout << "Device Handle is Open" << '\n';
+      std::cout << "Device Handle is open" << '\n';
+      Bootloader bootloader(*devicePtr);
     } else {
-      std::cout << "Device Handle is not Open" << '\n';
+      std::cout << "Device Handle is not open" << '\n';
     }
   }
 

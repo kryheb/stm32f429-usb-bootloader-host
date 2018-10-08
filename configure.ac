@@ -15,7 +15,7 @@ AC_PROG_CXX
 # Checks for libraries.
 
 AC_CHECK_LIB(hidapi-libusb, hid_enumerate, [], [AC_MSG_ERROR([Could not find hidapi lib, install libhidapi-dev])])
-
+AX_PTHREAD([], [AC_MSG_ERROR([Could not find pthread])])
 
 # Checks for header files.
 

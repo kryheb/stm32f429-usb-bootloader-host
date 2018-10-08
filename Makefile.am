@@ -5,9 +5,12 @@ bin_PROGRAMS = bootloaderhost
 
 bootloaderhost_SOURCES = \
 src/main.cpp \
-src/usbhid.cpp
+src/usbhid.cpp \
+src/bootloader.cpp \
+src/error.cpp
 
-bootloaderhost_CPPFLAGS = \
+bootloaderhost_CXXFLAGS = \
 -I /usr/include/hidapi \
 -I src
 
+bootloaderhost_LDADD = $(PTHREAD_CFLAGS)
