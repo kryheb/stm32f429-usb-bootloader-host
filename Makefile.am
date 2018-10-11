@@ -7,7 +7,8 @@ bootloaderhost_SOURCES = \
 src/main.cpp \
 src/usbhid.cpp \
 src/bootloader.cpp \
-src/error.cpp
+src/error.cpp \
+src/ihexparser.cpp
 
 bootloaderhost_CXXFLAGS = \
 -I /usr/include/hidapi \

@@ -5,9 +5,12 @@
 
 int main() {
 
+  constexpr auto VENDOR_ID = 0x483;
+  constexpr auto PRODUCT_ID = 0x5750;
+
   usbhid::BusController controller;
   controller.enumerateAll();
-  if (auto devicePtr = controller.findDevice(0x483, 0x5750)) {
+  if (auto devicePtr = controller.findDevice(VENDOR_ID, PRODUCT_ID)) {
     devicePtr->openCommunication();
     if (devicePtr->isOpen()) {
       std::cout << "Device Handle is open" << '\n';
