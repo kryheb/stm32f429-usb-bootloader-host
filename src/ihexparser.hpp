@@ -23,6 +23,7 @@ enum class State {
   RecordType,
   Data,
   Checksum,
+  Done,
   Error
 };
 
@@ -32,7 +33,7 @@ using Bytes = std::vector<Byte>;
 struct Record {
   Byte byteCount;
   uint16_t adddress;
-  RecordType recordCount;
+  RecordType recordType;
   Bytes data;
   Byte checksum;
 };
@@ -46,6 +47,7 @@ class IHexParser {
   IHexParser();
 
   bool openFile(const std::string& pFileName);
+  void parseFile();
 
 };
 
@@ -60,4 +62,6 @@ class IHexLineParser
 
   private:
   boost::optional<Byte> getByte(const std::string& pDataStr, size_t& pIndex);
+  boost::optional<RecordType> getRecordType(const Byte aByte);
+  bool verifyChecksum(const Record& pRecord);
 };
