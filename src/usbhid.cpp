@@ -77,6 +77,7 @@ void Device::sendCommand(Cmd pCommand, SendCommanCB pCallback)
     try {
       auto response = fReceiveResponse.get();
       // TODO: evaluate response
+      std::cout << "Response " << response << '\n';
       if (pCallback) pCallback(Error::errOK());
     } catch (std::exception& e) {
       std::cout << "Response exception: " << e.what() << '\n';

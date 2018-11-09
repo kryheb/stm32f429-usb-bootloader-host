@@ -10,10 +10,11 @@
 class Error;
 using ErrorPtr = std::shared_ptr<Error>;
 
+constexpr auto OK_ERR_CODE = 0;
+constexpr auto DEFAULT_ERR_CODE = 1;
+
 class Error
 {
-  static constexpr auto OK_ERR_CODE = 0;
-  static constexpr auto DEFAULT_ERR_CODE = 1;
   uint32_t mCode;
   const std::string mMsg;
 

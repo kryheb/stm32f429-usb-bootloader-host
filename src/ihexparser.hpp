@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdint.h>
 #include <string>
+#include <list>
 #include <boost/optional.hpp>
 
 
@@ -37,17 +38,20 @@ struct Record {
   Bytes data;
   Byte checksum;
 };
-
+using Records = std::list<Record>;
 
 class IHexParser {
 
-  std::ifstream file;
+  std::ifstream mFile;
+  Records mRecords;
 
   public:
   IHexParser();
 
   bool openFile(const std::string& pFileName);
   void parseFile();
+  size_t getDataSize() { return mRecords.size(); }
+  boost::optional<Record> getData();
 
 };
 

@@ -12,17 +12,32 @@ IHexParser::IHexParser()
 
 bool IHexParser::openFile(const std::string& pFileName)
 {
-  file.open(pFileName);
-  return file.is_open();
+  mFile.open(pFileName);
+  return mFile.is_open();
 }
 
 void IHexParser::parseFile()
 {
   std::string line;
-  while(std::getline(file, line)) {
+  while(std::getline(mFile, line)) {
     IHexLineParser lineParser;
-    auto val = lineParser.parseLine(line);
+    auto record = lineParser.parseLine(line);
+    if (!record) {
+      mRecords.clear();
+      return;
+    }
+    mRecords.push_back(*record);
   }
+}
+
+boost::optional<Record> IHexParser::getData()
+{
+  if (mRecords.empty()) {
+    return boost::none;
+  }
+  auto data = mRecords.front();
+  mRecords.pop_front();
+  return data;
 }
 
 
