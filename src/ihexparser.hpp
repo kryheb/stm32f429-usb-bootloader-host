@@ -51,7 +51,7 @@ class IHexParser {
   bool openFile(const std::string& pFileName);
   void parseFile();
   size_t getDataSize() { return mRecords.size(); }
-  boost::optional<Record> getData();
+  boost::optional<Record> popRecord();
 
 };
 

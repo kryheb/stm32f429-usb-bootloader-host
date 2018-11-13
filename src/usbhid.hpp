@@ -18,9 +18,8 @@ namespace usbhid {
 class Device
 {
   static constexpr auto RECEIVE_COMMAND_TIMEOUT = 5000;
-  using SendCommanCB = std::function<void(ErrorPtr)>;
-  static constexpr auto BUFFER_SIZE = 65;
-  using DataBuffer = std::array<uint8_t, BUFFER_SIZE>;
+  using SendDataCB = std::function<void(ErrorPtr)>;
+
   static constexpr auto RESPONSE_BYTE_INDEX = 1;
 
   public:
@@ -29,7 +28,7 @@ class Device
     bool openCommunication();
     bool isOpen() const { return mHandle; }
 
-    void sendCommand(Cmd pCommand, SendCommanCB pCallback);
+    void sendData(const DataBuffer& aData, SendDataCB pCallback);
 
     uint32_t getVendorId() const { return mVendorId; }
     uint32_t getProductId() const { return mProductId; }

@@ -30,7 +30,7 @@ void IHexParser::parseFile()
   }
 }
 
-boost::optional<Record> IHexParser::getData()
+boost::optional<Record> IHexParser::popRecord()
 {
   if (mRecords.empty()) {
     return boost::none;

@@ -5,6 +5,8 @@ class Bootloader
 {
   usbhid::Device& mDevice;
   IHexParser mIHexParser;
+  DataBuffer dataBuffer{0};
+
   void initialize();
 
   public:
@@ -14,6 +16,7 @@ class Bootloader
   void upload();
 
   private:
-  void applyConfiguration();
+  void setAddressBase(const Bytes& aData);
+  void processRecord(const Record& pRecord);
 
 };

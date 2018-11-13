@@ -55,11 +55,9 @@ bool Device::openCommunication()
 }
 
 
-void Device::sendCommand(Cmd pCommand, SendCommanCB pCallback)
+void Device::sendData(const DataBuffer& aData, SendDataCB pCallback)
 {
-  DataBuffer data{0};
-  data = {0x01, static_cast<uint8_t>(pCommand)};
-  hid_write(mHandle, data.data(), data.size());
+  hid_write(mHandle, aData.data(), aData.size());
 
   std::promise<int> pReceiveResponse;
   std::future<int> fReceiveResponse = pReceiveResponse.get_future();
