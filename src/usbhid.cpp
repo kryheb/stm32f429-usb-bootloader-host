@@ -91,7 +91,7 @@ uint8_t Device::receiveResponse()
   if (result <= 0) {
     throw std::runtime_error("No data received");
   }
-  return data[RESPONSE_BYTE_INDEX];
+  return data.at(RESPONSE_BYTE_INDEX);
 }
 
 

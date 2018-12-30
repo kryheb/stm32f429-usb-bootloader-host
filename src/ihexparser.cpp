@@ -72,7 +72,7 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
         auto msb = getByte(pLine, index);
         auto lsb = getByte(pLine, index);
         if (msb && lsb) {
-          record.adddress = (*msb << 8) | *lsb;
+          record.address = (*msb << 8) | *lsb;
           state = State::RecordType;
         } else {
           state = State::Error;
@@ -162,8 +162,8 @@ bool IHexLineParser::verifyChecksum(const Record& pRecord)
 {
   uint8_t sum = 0;
   sum = pRecord.byteCount
-        + ((pRecord.adddress >> 8) & 0xFF)
-        + (pRecord.adddress & 0xFF)
+        + ((pRecord.address >> 8) & 0xFF)
+        + (pRecord.address & 0xFF)
         + static_cast<uint8_t>(pRecord.recordType)
         + std::accumulate(pRecord.data.begin(), pRecord.data.end(), 0);
 

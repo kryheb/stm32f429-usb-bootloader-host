@@ -33,10 +33,18 @@ using Bytes = std::vector<Byte>;
 
 struct Record {
   Byte byteCount;
-  uint16_t adddress;
+  uint16_t address;
   RecordType recordType;
   Bytes data;
   Byte checksum;
+
+  Bytes rawRecord() const {
+    uint8_t addrMSB = (address >> 8) & 0xFF;
+    uint8_t addrLSB = (address & 0xFF);
+    Bytes rr = { byteCount, addrMSB, addrLSB, static_cast<uint8_t>(recordType), /*data,*/ checksum };
+    rr.insert(rr.begin() + 4, data.begin(), data.end());
+    return rr;
+  }
 };
 using Records = std::list<Record>;
 
