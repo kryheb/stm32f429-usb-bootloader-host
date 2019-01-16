@@ -5,9 +5,9 @@ using CompletedCb = std::function<void(ErrorPtr)>;
 
 class Bootloader
 {
+  static constexpr auto EP_ADDRESS = 1;
   usbhid::Device& mDevice;
   IHexParser mIHexParser;
-  DataBuffer dataBuffer{0};
 
   uint32_t hexSize = 0;
 
@@ -24,5 +24,7 @@ class Bootloader
   void initializeFlash(CompletedCb pCallback);
   void flashData(const Bytes& aData, CompletedCb pCallback);
   void processRecord(const Record& pRecord, CompletedCb pCallback);
+  void setStartLinearAddress(const Bytes& aData, CompletedCb pCallback);
+  void launchApplication();
 
 };

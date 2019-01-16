@@ -16,10 +16,9 @@ Bootloader::Bootloader(usbhid::Device& pDevice) :
 void Bootloader::initialize()
 {
   std::cout << "Bootloader initialization\n";
-  std::fill(dataBuffer.begin(), dataBuffer.end(), 0);
-  dataBuffer = {0x01, static_cast<uint8_t>(Cmd::Init)};
+  DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::Init)};
 
-  mDevice.sendData(dataBuffer, [](auto pErr){
+  mDevice.sendData(dataBuffer, TargetResponse::InitializationOK, [](auto pErr){
     if (pErr->isOK()) {
       std::cout << "Command ACK" << '\n';
     } else {
@@ -44,9 +43,7 @@ void Bootloader::readIHex(const std::string& pFileName)
 void Bootloader::upload()
 {
   std::cout << "Upload data\n";
-    auto cs = mIHexParser.getDataSize();
-    double p = (1 - (double)mIHexParser.getDataSize() / (double)hexSize);
-    std::cout << mIHexParser.getDataSize() << " / " << hexSize << '\n';
+  std::cout << mIHexParser.getDataSize() << " / " << hexSize << '\n';
 
   if(auto rec = mIHexParser.popRecord()) {
     processRecord(*rec, [&](ErrorPtr pErr){
@@ -54,17 +51,12 @@ void Bootloader::upload()
         this->upload();
       } else {
         std::cout << "Error received, breaking upload."
-          << "Cause: " << pErr->getMsg() << '\n';
+          << " Reason:" << pErr->getMsg() << '\n';
       }
     });
-
-
   } else {
-    std::cout<<'\n';
-    dataBuffer = {0x01, 0x50};
-    mDevice.sendData(dataBuffer, [](auto pErr){
-
-    });
+    std::cout << "Upload finished, going to launch application...\n";
+    launchApplication();
   }
 }
 
@@ -77,6 +69,7 @@ void Bootloader::processRecord(const Record& pRecord, CompletedCb pCallback)
       break;
     }
     case RecordType::EndOfFile: {
+      pCallback(Error::errOK());
       break;
     }
     case RecordType::ExtendedSegmentAddress: {
@@ -94,6 +87,7 @@ void Bootloader::processRecord(const Record& pRecord, CompletedCb pCallback)
       break;
     }
     case RecordType::StartLinearAddress: {
+      setStartLinearAddress(pRecord.rawRecord(), pCallback);
       break;
     }
     default: break;
@@ -104,10 +98,10 @@ void Bootloader::processRecord(const Record& pRecord, CompletedCb pCallback)
 void Bootloader::setAddressBase(const Bytes& aData, CompletedCb pCallback)
 {
   std::cout << "Prepare for configuration\n";
-  std::fill(dataBuffer.begin(), dataBuffer.end(), 0);
-  dataBuffer = {0x01, static_cast<uint8_t>(Cmd::SetAddressBase)};
+
+  DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::SetAddressBase)};
   std::copy(aData.begin(), aData.end(), dataBuffer.begin() + 2);
-  mDevice.sendData(dataBuffer, [&, pCallback](auto pErr){
+  mDevice.sendData(dataBuffer, TargetResponse::AddressBaseSet, [&, pCallback](auto pErr){
     if (pErr->isOK()) {
       std::cout << "setAddressBase ACK" << '\n';
       this->initializeFlash(pCallback);
@@ -123,9 +117,8 @@ void Bootloader::setAddressBase(const Bytes& aData, CompletedCb pCallback)
 void Bootloader::initializeFlash(CompletedCb pCallback)
 {
   std::cout << "Initialize flash\n";
-  std::fill(dataBuffer.begin(), dataBuffer.end(), 0);
-  dataBuffer = {0x01, static_cast<uint8_t>(Cmd::InitializeFlash)};
-  mDevice.sendData(dataBuffer, [pCallback](auto pErr){
+  DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::InitializeFlash)};
+  mDevice.sendData(dataBuffer, TargetResponse::FlashInitializationOK, [pCallback](auto pErr){
     if (pErr->isOK()) {
       std::cout << "setAddressBase ACK" << '\n';
     } else {
@@ -139,13 +132,12 @@ void Bootloader::initializeFlash(CompletedCb pCallback)
 
 void Bootloader::flashData(const Bytes& aData, CompletedCb pCallback)
 {
-  std::fill(dataBuffer.begin(), dataBuffer.end(), 0);
-  dataBuffer = {0x01, static_cast<uint8_t>(Cmd::FlashData)};
+  DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::FlashData)};
   std::copy(aData.begin(), aData.end(), dataBuffer.begin() + 2);
   for (auto e:dataBuffer) {
-    printf("|%x|", e);
+    printf("%x ", e);
   }
-  mDevice.sendData(dataBuffer, [pCallback](auto pErr){
+  mDevice.sendData(dataBuffer, TargetResponse::FlashingOK, [pCallback](auto pErr){
     if (pErr->isOK()) {
       std::cout << "flashData ACK" << '\n';
     } else {
@@ -157,4 +149,31 @@ void Bootloader::flashData(const Bytes& aData, CompletedCb pCallback)
 }
 
 
+void Bootloader::setStartLinearAddress(const Bytes& aData, CompletedCb pCallback)
+{
+  DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::SetStartAddress)};
+  std::copy(aData.begin(), aData.end(), dataBuffer.begin() + 2);
+  mDevice.sendData(dataBuffer, TargetResponse::SetStartAddressOK, [pCallback](auto pErr){
+    if (pErr->isOK()) {
+      std::cout << "setStartLinearAddress ACK" << '\n';
+    } else {
+      std::cout << "setStartLinearAddress NACK: "
+        << pErr->getMsg() << '\n';
+    }
+    pCallback(pErr);
+  });
+}
 
+
+void Bootloader::launchApplication()
+{
+  DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::LaunchApplication)};
+  mDevice.sendData(dataBuffer); 
+}
+
+
+
+
+
+
+  

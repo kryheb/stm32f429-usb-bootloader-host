@@ -55,9 +55,13 @@ bool Device::openCommunication()
 }
 
 
-void Device::sendData(const DataBuffer& aData, SendDataCB pCallback)
+void Device::sendData(const DataBuffer& aData, TargetResponse pAckCode, SendDataCB pCallback)
 {
   hid_write(mHandle, aData.data(), aData.size());
+
+  if (pAckCode == TargetResponse::NoResponseRequired) {
+    return;
+  }
 
   std::promise<int> pReceiveResponse;
   std::future<int> fReceiveResponse = pReceiveResponse.get_future();
@@ -70,17 +74,20 @@ void Device::sendData(const DataBuffer& aData, SendDataCB pCallback)
     }
   }).detach();
 
-    std::cout << "Waiting..." << '\n';
-    fReceiveResponse.wait();
-    try {
-      auto response = fReceiveResponse.get();
-      // TODO: evaluate response
-      std::cout << "Response " << response << '\n';
-      if (pCallback) pCallback(Error::errOK());
-    } catch (std::exception& e) {
-      std::cout << "Response exception: " << e.what() << '\n';
-      if (pCallback) pCallback(Error::err("Response timeout"));
+  std::cout << "Waiting..." << '\n';
+  fReceiveResponse.wait();
+  try {
+    auto response = fReceiveResponse.get();
+    std::cout << "Response " << std::hex << response << '\n';
+    if (response != toUnderlyingType(pAckCode)) {
+      if (pCallback) pCallback(Error::err("Invalid response: " + response));
     }
+    if (pCallback) pCallback(Error::errOK());
+
+  } catch (std::exception& e) {
+    std::cout << "Response exception: " << e.what() << '\n';
+    if (pCallback) pCallback(Error::err("Response timeout"));
+  }
 }
 
 

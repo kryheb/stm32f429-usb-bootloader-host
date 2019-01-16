@@ -28,7 +28,7 @@ class Device
     bool openCommunication();
     bool isOpen() const { return mHandle; }
 
-    void sendData(const DataBuffer& aData, SendDataCB pCallback);
+    void sendData(const DataBuffer& aData, TargetResponse pAckCode=TargetResponse::NoResponseRequired, SendDataCB pCallback={});
 
     uint32_t getVendorId() const { return mVendorId; }
     uint32_t getProductId() const { return mProductId; }
@@ -44,10 +44,6 @@ class Device
     hid_device* mHandle;
 
     uint8_t receiveResponse();
-
-
-
-
 };
 using DevicePtr = std::shared_ptr<Device>;
 using Devices = std::list<DevicePtr>;
@@ -55,7 +51,6 @@ using Devices = std::list<DevicePtr>;
 
 class BusController
 {
-
   public:
     BusController();
     void enumerateAll();

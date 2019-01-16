@@ -15,7 +15,7 @@ int main() {
     if (devicePtr->isOpen()) {
       std::cout << "Device Handle is open" << '\n';
       Bootloader bootloader(*devicePtr);
-      bootloader.readIHex("example.ihex");
+      bootloader.readIHex("led_bl.ihex");
       bootloader.upload();
     } else {
       std::cout << "Device Handle is not open" << '\n';
@@ -23,6 +23,6 @@ int main() {
   }
 
 
-
+  std::cout << "Closing bootloader..." << '\n';
   return 0;
 }
