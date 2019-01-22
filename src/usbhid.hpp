@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 #include <algorithm>
+#include <functional>
 
 #include "error.hpp"
 #include "defs.hpp"
