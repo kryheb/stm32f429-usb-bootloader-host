@@ -40,10 +40,10 @@ void IHexParser::parseFile()
   }
 }
 
-boost::optional<Record> IHexParser::popRecord()
+std::optional<Record> IHexParser::popRecord()
 {
   if (mRecords.empty()) {
-    return boost::none;
+    return std::nullopt;
   }
   auto data = mRecords.front();
   mRecords.pop_front();
@@ -58,7 +58,7 @@ IHexLineParser::IHexLineParser() :
 }
 
 
-boost::optional<Record> IHexLineParser::parseLine(const std::string& aLine)
+std::optional<Record> IHexLineParser::parseLine(const std::string& aLine)
 {
   Record record{0};
   state = State::StartCode;
@@ -131,21 +131,21 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& aLine)
       case State::Done:
         return record;
       case State::Error:
-        return boost::none;
+        return std::nullopt;
 
       default:
-        return boost::none;
+        return std::nullopt;
     }
   }
 
-  return boost::none;
+  return std::nullopt;
 }
 
 
-boost::optional<Byte> IHexLineParser::getByte(const std::string& aDataStr, size_t& aIndex)
+std::optional<Byte> IHexLineParser::getByte(const std::string& aDataStr, size_t& aIndex)
 {
   if (aDataStr.size() < 2) {
-    return boost::none;
+    return std::nullopt;
   }
 
   auto byteStr = aDataStr.substr(aIndex, 2);
@@ -157,14 +157,14 @@ boost::optional<Byte> IHexLineParser::getByte(const std::string& aDataStr, size_
     LOG(severity_level::error) << "getByte exception: " << e.what();
   }
 
-  return boost::none;
+  return std::nullopt;
 }
 
 
-boost::optional<RecordType> IHexLineParser::getRecordType(const Byte aByte)
+std::optional<RecordType> IHexLineParser::getRecordType(const Byte aByte)
 {
   if (aByte>static_cast<int>(RecordType::StartLinearAddress)) {
-    return boost::none;
+    return std::nullopt;
   }
   return static_cast<RecordType>(aByte);
 }

@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <string>
 #include <list>
-#include <boost/optional.hpp>
+#include <optional>
 #include "utils/log/log.hpp"
 
 
@@ -67,7 +67,7 @@ class IHexParser {
   bool openFile(const std::string& aFileName);
   void parseFile();
   size_t getDataSize() { return mRecords.size(); }
-  boost::optional<Record> popRecord();
+  std::optional<Record> popRecord();
 
 };
 
@@ -79,10 +79,10 @@ class IHexLineParser
 
   public:
   IHexLineParser();
-  boost::optional<Record> parseLine(const std::string& aLine);
+  std::optional<Record> parseLine(const std::string& aLine);
 
   private:
-  boost::optional<Byte> getByte(const std::string& aDataStr, size_t& aIndex);
-  boost::optional<RecordType> getRecordType(const Byte aByte);
+  std::optional<Byte> getByte(const std::string& aDataStr, size_t& aIndex);
+  std::optional<RecordType> getRecordType(const Byte aByte);
   bool verifyChecksum(const Record& aRecord);
 };
