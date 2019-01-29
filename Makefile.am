@@ -5,13 +5,23 @@ bin_PROGRAMS = bootloaderhost
 
 bootloaderhost_SOURCES = \
 src/main.cpp \
-src/usbhid.cpp \
-src/bootloader.cpp \
-src/error.cpp \
-src/ihexparser.cpp
+src/bootloader/usbhid.cpp \
+src/bootloader/bootloader.cpp \
+src/bootloader/error.cpp \
+src/bootloader/ihexparser.cpp \
+src/utils/log/log.cpp
 
 bootloaderhost_CXXFLAGS = \
 -I /usr/include/hidapi \
--I src
+-I src/bootloader \
+-I src/utils/log \
+-DBOOST_LOG_DYN_LINK \
+-std=c++17
 
-bootloaderhost_LDADD = $(PTHREAD_CFLAGS)
+bootloaderhost_LDADD = \
+$(PTHREAD_CFLAGS) \
+-lboost_log \
+-lboost_log_setup \
+-lboost_system \
+-lboost_thread \
+-lboost_date_time

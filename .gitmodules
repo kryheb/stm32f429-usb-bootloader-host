@@ -1,0 +1,6 @@
+[submodule "src/-f"]
+	path = src/-f
+	url = git@github.com:kryheb/utils.git
+[submodule "src/utils"]
+	path = src/utils
+	url = git@github.com:kryheb/utils.git
