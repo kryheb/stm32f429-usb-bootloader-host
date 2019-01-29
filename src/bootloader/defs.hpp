@@ -1,4 +1,10 @@
-
+/*
+ * file   defs.hpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ * Common definitions
+ */
 
 #pragma once
 
@@ -31,9 +37,9 @@ enum class TargetResponse: uint8_t  {
 };
 
 template<typename T>
-constexpr auto toUnderlyingType(T pVal)
+constexpr auto toUnderlyingType(T aVal)
 {
-  return static_cast<std::underlying_type_t<T>>(pVal);
+  return static_cast<std::underlying_type_t<T>>(aVal);
 }
 
 static constexpr auto BUFFER_SIZE = 65;

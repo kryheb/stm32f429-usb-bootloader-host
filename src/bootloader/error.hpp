@@ -1,3 +1,11 @@
+/*
+ * file   error.hpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ * Error class and utils
+ */
+
 #pragma once
 
 #include <stdint.h>
@@ -19,8 +27,8 @@ class Error
   const std::string mMsg;
 
   public:
-  Error(const uint32_t pCode, const std::string& pMsg);
-  static ErrorPtr err(const std::string& pMsg);
+  Error(const uint32_t aCode, const std::string& aMsg);
+  static ErrorPtr err(const std::string& aMsg);
   static ErrorPtr errOK();
   bool isOK();
   std::string getMsg() const { return mMsg; }

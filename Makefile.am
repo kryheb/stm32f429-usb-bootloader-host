@@ -14,7 +14,7 @@ src/utils/log/log.cpp
 bootloaderhost_CXXFLAGS = \
 -I /usr/include/hidapi \
 -I src/bootloader \
--I src/utils/log \
+-I src \
 -DBOOST_LOG_DYN_LINK \
 -std=c++17
 

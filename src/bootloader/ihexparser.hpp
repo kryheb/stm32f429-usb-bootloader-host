@@ -1,3 +1,10 @@
+/*
+ * file   ihexparser.hpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ * intel hex parser
+ */
 
 #include <vector>
 #include <fstream>
@@ -5,6 +12,7 @@
 #include <string>
 #include <list>
 #include <boost/optional.hpp>
+#include "utils/log/log.hpp"
 
 
 enum class RecordType {
@@ -56,7 +64,7 @@ class IHexParser {
   public:
   IHexParser();
 
-  bool openFile(const std::string& pFileName);
+  bool openFile(const std::string& aFileName);
   void parseFile();
   size_t getDataSize() { return mRecords.size(); }
   boost::optional<Record> popRecord();
@@ -67,13 +75,14 @@ class IHexParser {
 class IHexLineParser
 {
   State state = State::NoState;
+  LoggerChannel& mLoggerChannel;
 
   public:
   IHexLineParser();
-  boost::optional<Record> parseLine(const std::string& pLine);
+  boost::optional<Record> parseLine(const std::string& aLine);
 
   private:
-  boost::optional<Byte> getByte(const std::string& pDataStr, size_t& pIndex);
+  boost::optional<Byte> getByte(const std::string& aDataStr, size_t& aIndex);
   boost::optional<RecordType> getRecordType(const Byte aByte);
-  bool verifyChecksum(const Record& pRecord);
+  bool verifyChecksum(const Record& aRecord);
 };

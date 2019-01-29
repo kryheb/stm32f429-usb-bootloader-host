@@ -1,8 +1,18 @@
-
+/*
+ * file   ihexparser.cpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ * intel hex parser
+ */
 
 #include "ihexparser.hpp"
 #include <iostream>
 #include <numeric>
+
+#define LOG(s) BOOST_LOG_SEV(mLoggerChannel, s)
+using namespace boost::log::trivial;
+
 
 IHexParser::IHexParser()
 {
@@ -10,9 +20,9 @@ IHexParser::IHexParser()
 }
 
 
-bool IHexParser::openFile(const std::string& pFileName)
+bool IHexParser::openFile(const std::string& aFileName)
 {
-  mFile.open(pFileName);
+  mFile.open(aFileName);
   return mFile.is_open();
 }
 
@@ -41,18 +51,19 @@ boost::optional<Record> IHexParser::popRecord()
 }
 
 
-IHexLineParser::IHexLineParser()
+IHexLineParser::IHexLineParser() :
+  mLoggerChannel(Logger::getInstance().addChannel("IHEX PARSER"))
 {
 
 }
 
 
-boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
+boost::optional<Record> IHexLineParser::parseLine(const std::string& aLine)
 {
   Record record{0};
   state = State::StartCode;
   
-  for (size_t index = 0; index<=pLine.size();) {
+  for (size_t index = 0; index<=aLine.size();) {
     switch(state) {
       case State::StartCode: {
         index++;
@@ -60,7 +71,7 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
         break;
       }
       case State::ByteCount: {
-        if (auto byteCount = getByte(pLine, index)) {
+        if (auto byteCount = getByte(aLine, index)) {
           record.byteCount = *byteCount;
           state = State::Address;
         } else {
@@ -69,8 +80,8 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
         break;
       }
       case State::Address: {
-        auto msb = getByte(pLine, index);
-        auto lsb = getByte(pLine, index);
+        auto msb = getByte(aLine, index);
+        auto lsb = getByte(aLine, index);
         if (msb && lsb) {
           record.address = (*msb << 8) | *lsb;
           state = State::RecordType;
@@ -80,7 +91,7 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
         break;
       }
       case State::RecordType: {
-        auto recordTypeByte = getByte(pLine, index);
+        auto recordTypeByte = getByte(aLine, index);
         if (!recordTypeByte) {
           state = State::Error;
           break;
@@ -99,7 +110,7 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
           state = State::Checksum;
           break;
         }
-        if (auto dataByte = getByte(pLine, index)) {
+        if (auto dataByte = getByte(aLine, index)) {
           record.data.push_back(*dataByte);
         } else {
           state = State::Error;
@@ -107,7 +118,7 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
         break;
       }
       case State::Checksum: {
-        if (auto checksum = getByte(pLine, index)) {
+        if (auto checksum = getByte(aLine, index)) {
           record.checksum = *checksum;
           if (verifyChecksum(record)) {
             state = State::Done;
@@ -131,44 +142,44 @@ boost::optional<Record> IHexLineParser::parseLine(const std::string& pLine)
 }
 
 
-boost::optional<Byte> IHexLineParser::getByte(const std::string& pDataStr, size_t& pIndex)
+boost::optional<Byte> IHexLineParser::getByte(const std::string& aDataStr, size_t& aIndex)
 {
-  if (pDataStr.size() < 2) {
+  if (aDataStr.size() < 2) {
     return boost::none;
   }
 
-  auto byteStr = pDataStr.substr(pIndex, 2);
-  pIndex += 2;
+  auto byteStr = aDataStr.substr(aIndex, 2);
+  aIndex += 2;
   try {
     Byte byte = std::stoul(byteStr, nullptr, 16);
     return byte;
   } catch (std::exception& e) {
-    std::cout << e.what() << '\n';
+    LOG(severity_level::error) << "getByte exception: " << e.what();
   }
 
   return boost::none;
 }
 
 
-boost::optional<RecordType> IHexLineParser::getRecordType(const Byte pByte)
+boost::optional<RecordType> IHexLineParser::getRecordType(const Byte aByte)
 {
-  if (pByte>static_cast<int>(RecordType::StartLinearAddress)) {
+  if (aByte>static_cast<int>(RecordType::StartLinearAddress)) {
     return boost::none;
   }
-  return static_cast<RecordType>(pByte);
+  return static_cast<RecordType>(aByte);
 }
 
-bool IHexLineParser::verifyChecksum(const Record& pRecord)
+bool IHexLineParser::verifyChecksum(const Record& aRecord)
 {
   uint8_t sum = 0;
-  sum = pRecord.byteCount
-        + ((pRecord.address >> 8) & 0xFF)
-        + (pRecord.address & 0xFF)
-        + static_cast<uint8_t>(pRecord.recordType)
-        + std::accumulate(pRecord.data.begin(), pRecord.data.end(), 0);
+  sum = aRecord.byteCount
+        + ((aRecord.address >> 8) & 0xFF)
+        + (aRecord.address & 0xFF)
+        + static_cast<uint8_t>(aRecord.recordType)
+        + std::accumulate(aRecord.data.begin(), aRecord.data.end(), 0);
 
   sum ^= 0xFF;
   sum++;
-  return sum == pRecord.checksum;
+  return sum == aRecord.checksum;
 }
 

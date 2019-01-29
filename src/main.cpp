@@ -2,8 +2,17 @@
 #include "usbhid.hpp"
 #include "bootloader.hpp"
 #include <stdio.h>
+#include "utils/log/log.hpp"
+
+#define LOG(s) BOOST_LOG_SEV(generalChannel, s)
+using namespace boost::log::trivial;
 
 int main() {
+
+  auto& logger = Logger::getInstance();
+  logger.init();
+
+  auto generalChannel = logger.addChannel("MAIN");
 
   constexpr auto VENDOR_ID = 0x483;
   constexpr auto PRODUCT_ID = 0x5750;
@@ -13,16 +22,16 @@ int main() {
   if (auto devicePtr = controller.findDevice(VENDOR_ID, PRODUCT_ID)) {
     devicePtr->openCommunication();
     if (devicePtr->isOpen()) {
-      std::cout << "Device Handle is open" << '\n';
+      LOG(severity_level::info) << "Device handle is open";
       Bootloader bootloader(*devicePtr);
       bootloader.readIHex("led_bl.ihex");
       bootloader.upload();
     } else {
-      std::cout << "Device Handle is not open" << '\n';
+      LOG(severity_level::error) << "Cannot open device handle";
     }
   }
 
 
-  std::cout << "Closing bootloader..." << '\n';
+  LOG(severity_level::info) << "Closing bootloader...";
   return 0;
 }

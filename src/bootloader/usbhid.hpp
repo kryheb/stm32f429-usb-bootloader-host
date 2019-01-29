@@ -1,3 +1,11 @@
+/*
+ * file   usbhid.hpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ * usb HID communication layer
+ */
+
 #pragma once
 
 #include "hidapi.h"
@@ -10,11 +18,10 @@
 
 #include "error.hpp"
 #include "defs.hpp"
+#include "utils/log/log.hpp"
 
 
 namespace usbhid {
-
-
 
 class Device
 {
@@ -24,12 +31,12 @@ class Device
   static constexpr auto RESPONSE_BYTE_INDEX = 1;
 
   public:
-    Device(const struct hid_device_info* pDeviceInfoPtr);
+    Device(const struct hid_device_info* aDeviceInfoPtr);
     void showDeviceInfo() const;
     bool openCommunication();
     bool isOpen() const { return mHandle; }
 
-    void sendData(const DataBuffer& aData, TargetResponse pAckCode=TargetResponse::NoResponseRequired, SendDataCB pCallback={});
+    void sendData(const DataBuffer& aData, TargetResponse aAckCode=TargetResponse::NoResponseRequired, SendDataCB aCallback={});
 
     uint32_t getVendorId() const { return mVendorId; }
     uint32_t getProductId() const { return mProductId; }
@@ -43,6 +50,7 @@ class Device
     std::string mProductString;
 
     hid_device* mHandle;
+    LoggerChannel& mLoggerChannel;
 
     uint8_t receiveResponse();
 };
@@ -55,7 +63,7 @@ class BusController
   public:
     BusController();
     void enumerateAll();
-    DevicePtr findDevice(uint32_t pVendorId, uint32_t pProductId);
+    DevicePtr findDevice(uint32_t aVendorId, uint32_t aProductId);
 
   private:
     Devices mDevices;

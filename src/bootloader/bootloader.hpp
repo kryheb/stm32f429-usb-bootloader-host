@@ -1,5 +1,13 @@
+/*
+ * file   bootloader.hpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ */
+
 #include "usbhid.hpp"
 #include "ihexparser.hpp"
+#include "utils/log/log.hpp"
 
 using CompletedCb = std::function<void(ErrorPtr)>;
 
@@ -9,22 +17,24 @@ class Bootloader
   usbhid::Device& mDevice;
   IHexParser mIHexParser;
 
+  LoggerChannel& mLoggerChannel;
+
   uint32_t hexSize = 0;
 
   void initialize();
 
   public:
-  Bootloader(usbhid::Device& pDevice);
+  Bootloader(usbhid::Device& aDevice);
 
-  void readIHex(const std::string& pFileName);
+  void readIHex(const std::string& aFileName);
   void upload();
 
   private:
-  void setAddressBase(const Bytes& aData, CompletedCb pCallback);
-  void initializeFlash(CompletedCb pCallback);
-  void flashData(const Bytes& aData, CompletedCb pCallback);
-  void processRecord(const Record& pRecord, CompletedCb pCallback);
-  void setStartLinearAddress(const Bytes& aData, CompletedCb pCallback);
+  void setAddressBase(const Bytes& aData, CompletedCb aCallback);
+  void initializeFlash(CompletedCb aCallback);
+  void flashData(const Bytes& aData, CompletedCb aCallback);
+  void processRecord(const Record& aRecord, CompletedCb aCallback);
+  void setStartLinearAddress(const Bytes& aData, CompletedCb aCallback);
   void launchApplication();
 
 };

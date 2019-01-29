@@ -1,33 +1,42 @@
-
+/*
+ * file   usbhid.cpp
+ * author Krystian Heberlein
+ * email  krystianheberlein@gmail.com
+ *
+ * usb HID communication layer
+ */
 
 #include "usbhid.hpp"
 #include <iostream>
 #include <future>
 #include <stdexcept>
 
+#define LOG(s) BOOST_LOG_SEV(mLoggerChannel, s)
+using namespace boost::log::trivial;
 
 using namespace usbhid;
 
 
-std::string wideCharToString(wchar_t* pWideCharTxtPtr)
+std::string wideCharToString(wchar_t* aWideCharTxtPtr)
 {
-  if (pWideCharTxtPtr) {
-    std::wstring ws(pWideCharTxtPtr);
+  if (aWideCharTxtPtr) {
+    std::wstring ws(aWideCharTxtPtr);
     return std::string(ws.begin(), ws.end());
   }
   return "";
 }
 
 
-Device::Device(const struct hid_device_info* pDeviceInfoPtr)
+Device::Device(const struct hid_device_info* aDeviceInfoPtr):
+  mLoggerChannel(Logger::getInstance().addChannel("USB DEVICE"))
 {
-  if (pDeviceInfoPtr) {
-    mVendorId = pDeviceInfoPtr->vendor_id;
-    mProductId = pDeviceInfoPtr->product_id;
-    mPath = pDeviceInfoPtr->path;
-    mSerialNumber = wideCharToString(pDeviceInfoPtr->serial_number);
-    mManufacturerName = wideCharToString(pDeviceInfoPtr->manufacturer_string);
-    mProductString = wideCharToString(pDeviceInfoPtr->product_string);
+  if (aDeviceInfoPtr) {
+    mVendorId = aDeviceInfoPtr->vendor_id;
+    mProductId = aDeviceInfoPtr->product_id;
+    mPath = aDeviceInfoPtr->path;
+    mSerialNumber = wideCharToString(aDeviceInfoPtr->serial_number);
+    mManufacturerName = wideCharToString(aDeviceInfoPtr->manufacturer_string);
+    mProductString = wideCharToString(aDeviceInfoPtr->product_string);
   }
 
   showDeviceInfo();
@@ -36,15 +45,14 @@ Device::Device(const struct hid_device_info* pDeviceInfoPtr)
 
 void Device::showDeviceInfo() const
 {
-  std::cout
+  LOG(severity_level::info) << '\n'
       << "Device Info:" << '\n'
       << " - vendor id:     " << std::hex << "0x" << mVendorId << '\n'
       << " - product id:    " << std::hex << "0x" << mProductId << '\n'
       << " - path:          " << mPath << '\n'
       << " - serial number: " << mSerialNumber << '\n'
       << " - manufacturer:  " << mManufacturerName << '\n'
-      << " - product name:  " << mProductString << '\n'
-      << '\n';
+      << " - product name:  " << mProductString;
 }
 
 
@@ -55,38 +63,38 @@ bool Device::openCommunication()
 }
 
 
-void Device::sendData(const DataBuffer& aData, TargetResponse pAckCode, SendDataCB pCallback)
+void Device::sendData(const DataBuffer& aData, TargetResponse aAckCode, SendDataCB aCallback)
 {
   hid_write(mHandle, aData.data(), aData.size());
 
-  if (pAckCode == TargetResponse::NoResponseRequired) {
+  if (aAckCode == TargetResponse::NoResponseRequired) {
     return;
   }
 
-  std::promise<int> pReceiveResponse;
-  std::future<int> fReceiveResponse = pReceiveResponse.get_future();
-  std::thread([&pReceiveResponse, this]{
+  std::promise<int> aReceiveResponse;
+  std::future<int> fReceiveResponse = aReceiveResponse.get_future();
+  std::thread([&aReceiveResponse, this]{
     try {
       auto result = receiveResponse();
-      pReceiveResponse.set_value(result);
+      aReceiveResponse.set_value(result);
     } catch (...) {
-      pReceiveResponse.set_exception(std::current_exception());
+      aReceiveResponse.set_exception(std::current_exception());
     }
   }).detach();
 
-  std::cout << "Waiting..." << '\n';
+  LOG(severity_level::debug) << "Waiting for response...";
   fReceiveResponse.wait();
   try {
     auto response = fReceiveResponse.get();
-    std::cout << "Response " << std::hex << response << '\n';
-    if (response != toUnderlyingType(pAckCode)) {
-      if (pCallback) pCallback(Error::err("Invalid response: " + response));
+    LOG(severity_level::debug) << "Response received: " << std::hex << response;
+    if (response != toUnderlyingType(aAckCode)) {
+      if (aCallback) aCallback(Error::err("Invalid response: " + response));
     }
-    if (pCallback) pCallback(Error::errOK());
+    if (aCallback) aCallback(Error::errOK());
 
   } catch (std::exception& e) {
-    std::cout << "Response exception: " << e.what() << '\n';
-    if (pCallback) pCallback(Error::err("Response timeout"));
+    LOG(severity_level::error) << "Response exception: " << e.what();
+    if (aCallback) aCallback(Error::err("Response timeout"));
   }
 }
 
@@ -122,11 +130,11 @@ void BusController::enumerateAll()
 }
 
 
-DevicePtr BusController::findDevice(uint32_t pVendorId, uint32_t pProductId)
+DevicePtr BusController::findDevice(uint32_t aVendorId, uint32_t aProductId)
 {
-  auto it = std::find_if(mDevices.begin(), mDevices.end(), [=](auto pDevicePtr){
-    return (pDevicePtr->getVendorId() == pVendorId) &&
-            (pDevicePtr->getProductId() == pProductId);
+  auto it = std::find_if(mDevices.begin(), mDevices.end(), [=](auto aDevicePtr){
+    return (aDevicePtr->getVendorId() == aVendorId) &&
+            (aDevicePtr->getProductId() == aProductId);
   });
 
   if (it != mDevices.end()) {
