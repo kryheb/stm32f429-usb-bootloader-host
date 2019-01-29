@@ -9,6 +9,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
+#include <iomanip>
 
 
 #define LOG(s) BOOST_LOG_SEV(mLoggerChannel, s)
@@ -148,11 +149,19 @@ void Bootloader::flashData(const Bytes& aData, CompletedCb aCallback)
   DataBuffer dataBuffer = {EP_ADDRESS, toUnderlyingType(Cmd::FlashData)};
   std::copy(aData.begin(), aData.end(), dataBuffer.begin() + 2);
 
-  std::stringstream ss;
-  for (auto e:dataBuffer) {
-    ss << std::hex << static_cast<int>(e);
+  std::stringstream hexDump;
+  hexDump << "Data buffer:";
+  for (auto i=0; i<dataBuffer.size(); ++i) {
+    if (i%16==0) {
+      hexDump << '\n'
+              << std::setfill(' ') << std::setw(60)
+              << ' ';
+    }
+    hexDump << std::setfill('0') << std::setw(2)
+            << std::hex << static_cast<int>(dataBuffer.at(i))
+            << ' ';
   }
-  LOG(severity_level::debug) << ss.str();
+  LOG(severity_level::debug) << hexDump.str();
 
   mDevice.sendData(dataBuffer, TargetResponse::FlashingOK, [=](auto aErr){
     if (aErr->isOK()) {
